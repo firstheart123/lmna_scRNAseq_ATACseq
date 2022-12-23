@@ -1,0 +1,295 @@
+# RNA_seq
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(reticulate)
+library(stringr)
+library(tidyverse)
+
+E13WT1.data <- Read10X(data.dir = "E13-5_WT_1/")
+E13WT2.data <- Read10X(data.dir = "E13-5_WT_2/")
+E13hetero1.data <- Read10X(data.dir = "E13-5_HeteroKI_1/")
+E13hetero2.data <- Read10X(data.dir = "E13-5_HeteroKI_2/")
+E17WT1.data <- Read10X(data.dir = "E17-5_WT1/")
+E17WT2.data <- Read10X(data.dir = "E17-5_WT2/")
+E17hetero1.data <- Read10X(data.dir = "E17-5_heteroKI1/")
+E17hetero2.data <- Read10X(data.dir = "E17-5_heteroKI2/")
+E17hetero3.data <- Read10X(data.dir = "E17-5_heteroKI3/")
+
+E13WT1.SO <- CreateSeuratObject(counts = E13WT1.data, project = "E13WT1", min.cells = FALSE, min.features = FALSE)
+E13WT2.SO <- CreateSeuratObject(counts = E13WT2.data, project = "E13WT2", min.cells = FALSE, min.features = FALSE)
+E13hetero1.SO <- CreateSeuratObject(counts = E13hetero1.data, project = "E13hetero1", min.cells = FALSE, min.features = FALSE)
+E13hetero2.SO <- CreateSeuratObject(counts = E13hetero2.data, project = "E13hetero2", min.cells = FALSE, min.features = FALSE)
+E17WT1.SO <- CreateSeuratObject(counts = E17WT1.data, project = "E17WT1", min.cells = FALSE, min.features = FALSE)
+E17WT2.SO <- CreateSeuratObject(counts = E17WT2.data, project = "E17WT2", min.cells = FALSE, min.features = FALSE)
+E17hetero1.SO <- CreateSeuratObject(counts = E17hetero1.data, project = "E17hetero1", min.cells = FALSE, min.features = FALSE)
+E17hetero2.SO <- CreateSeuratObject(counts = E17hetero2.data, project = "E17hetero2", min.cells = FALSE, min.features = FALSE)
+E17hetero3.SO <- CreateSeuratObject(counts = E17hetero3.data, project = "E17hetero3", min.cells = FALSE, min.features = FALSE)
+
+E13WT1.SO[["percent.mt"]] <- PercentageFeatureSet(E13WT1.SO, pattern = "^mt-")
+E13WT2.SO[["percent.mt"]] <- PercentageFeatureSet(E13WT2.SO, pattern = "^mt-")
+E13hetero1.SO[["percent.mt"]] <- PercentageFeatureSet(E13hetero1.SO, pattern = "^mt-")
+E13hetero2.SO[["percent.mt"]] <- PercentageFeatureSet(E13hetero2.SO, pattern = "^mt-")
+E17WT1.SO[["percent.mt"]] <- PercentageFeatureSet(E17WT1.SO, pattern = "^mt-")
+E17WT2.SO[["percent.mt"]] <- PercentageFeatureSet(E17WT2.SO, pattern = "^mt-")
+E17hetero1.SO[["percent.mt"]] <- PercentageFeatureSet(E17hetero1.SO, pattern = "^mt-")
+E17hetero2.SO[["percent.mt"]] <- PercentageFeatureSet(E17hetero2.SO, pattern = "^mt-")
+E17hetero3.SO[["percent.mt"]] <- PercentageFeatureSet(E17hetero3.SO, pattern = "^mt-")
+
+E13WT1_notMT.index <- grep(pattern = "^mt-", x = rownames(E13WT1.SO[["RNA"]]), value = FALSE)
+E13WT2_notMT.index <- grep(pattern = "^mt-", x = rownames(E13WT2.SO[["RNA"]]), value = FALSE)
+E13hetero1_notMT.index <- grep(pattern = "^mt-", x = rownames(E13hetero1.SO[["RNA"]]), value = FALSE)
+E13hetero2_notMT.index <- grep(pattern = "^mt-", x = rownames(E13hetero2.SO[["RNA"]]), value = FALSE)
+E17WT1_notMT.index <- grep(pattern = "^mt-", x = rownames(E17WT1.SO[["RNA"]]), value = FALSE)
+E17WT2_notMT.index <- grep(pattern = "^mt-", x = rownames(E17WT2.SO[["RNA"]]), value = FALSE)
+E17hetero1_notMT.index <- grep(pattern = "^mt-", x = rownames(E17hetero1.SO[["RNA"]]), value = FALSE)
+E17hetero2_notMT.index <- grep(pattern = "^mt-", x = rownames(E17hetero2.SO[["RNA"]]), value = FALSE)
+E17hetero3_notMT.index <- grep(pattern = "^mt-", x = rownames(E17hetero3.SO[["RNA"]]), value = FALSE)
+
+E13WT1_matrix <- E13WT1.SO[["RNA"]][-E13WT1_notMT.index, ]
+E13WT2_matrix <- E13WT2.SO[["RNA"]][-E13WT2_notMT.index, ]
+E13hetero1_matrix <- E13hetero1.SO[["RNA"]][-E13hetero1_notMT.index, ]
+E13hetero2_matrix <- E13hetero2.SO[["RNA"]][-E13hetero2_notMT.index, ]
+E17WT1_matrix <- E17WT1.SO[["RNA"]][-E17WT1_notMT.index, ]
+E17WT2_matrix <- E17WT2.SO[["RNA"]][-E17WT2_notMT.index, ]
+E17hetero1_matrix <- E17hetero1.SO[["RNA"]][-E17hetero1_notMT.index, ]
+E17hetero2_matrix <- E17hetero2.SO[["RNA"]][-E17hetero2_notMT.index, ]
+E17hetero3_matrix <- E17hetero3.SO[["RNA"]][-E17hetero3_notMT.index, ]
+
+E13WT1.SO <- CreateSeuratObject(counts = E13WT1_matrix, meta.data = E13WT1.SO@meta.data)
+E13WT2.SO <- CreateSeuratObject(counts = E13WT2_matrix, meta.data = E13WT2.SO@meta.data)
+E13hetero1.SO <- CreateSeuratObject(counts = E13hetero1_matrix, meta.data = E13hetero1.SO@meta.data)
+E13hetero2.SO <- CreateSeuratObject(counts = E13hetero2_matrix, meta.data = E13hetero2.SO@meta.data)
+E17WT1.SO <- CreateSeuratObject(counts = E17WT1_matrix, meta.data = E17WT1.SO@meta.data)
+E17WT2.SO <- CreateSeuratObject(counts = E17WT2_matrix, meta.data = E17WT2.SO@meta.data)
+E17hetero1.SO <- CreateSeuratObject(counts = E17hetero1_matrix, meta.data = E17hetero1.SO@meta.data)
+E17hetero2.SO <- CreateSeuratObject(counts = E17hetero2_matrix, meta.data = E17hetero2.SO@meta.data)
+E17hetero3.SO <- CreateSeuratObject(counts = E17hetero3_matrix, meta.data = E17hetero3.SO@meta.data)
+
+
+E13WT1.SO <- subset(E13WT1.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E13WT2.SO <- subset(E13WT2.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E13hetero1.SO <- subset(E13hetero1.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E13hetero2.SO <- subset(E13hetero2.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E17WT1.SO <- subset(E17WT1.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E17WT2.SO <- subset(E17WT2.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E17hetero1.SO <- subset(E17hetero1.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E17hetero2.SO <- subset(E17hetero2.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+E17hetero3.SO <- subset(E17hetero3.SO, subset = nFeature_RNA > 1000 & percent.mt < 50) %>% NormalizeData(normalization.method = "LogNormalize", scale.factor = 10000) %>% FindVariableFeatures(selection.method = "vst", nfeatures = 2000)
+
+anchors <- FindIntegrationAnchors(object.list = list(E13WT1.SO, E13WT2.SO, E13hetero1.SO, E13hetero2.SO, E17WT1.SO, E17WT2.SO, E17hetero1.SO, E17hetero2.SO, E17hetero3.SO), dims = 1:20)
+combined <- IntegrateData(anchorset = anchors, dims = 1:20)
+combined <- ScaleData(combined) %>% RunPCA(npcs = 30) %>% RunUMAP(reduction = "pca", dims = 1:15, umap.method = 'umap-learn') %>% FindNeighbors(reduction = "pca", dims = 1:15) %>% FindClusters(resolution = 0.20)
+
+lamin_CM <- subset(combined, idents = c("2", "5", "9", "12"))
+DefaultAssay(lamin_CM) <- "RNA"
+lamin_CM <- FindVariableFeatures(lamin_CM, selection.method = "vst", nfeatures = 2000) %>% ScaleData() %>% RunPCA(npcs = 30) %>% RunUMAP(reduction = "pca", dims = 1:10, umap.method = 'umap-learn') %>% FindNeighbors(reduction = "pca", dims = 1:10) %>% FindClusters(resolution = 0.15)
+
+# ATAC_seq
+library(Signac)
+library(EnsDb.Mmusculus.v79)
+library(BSgenome.Mmusculus.UCSC.mm10)
+library(JASPAR2020)
+library(TFBSTools)
+library(rtracklayer)
+
+annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
+genome(annotations) <- "mm10"
+seqlevelsStyle(annotations) <- "UCSC"
+
+KI1_counts <- Read10X_h5(filename = "KI1/outs/filtered_peak_bc_matrix.h5")
+KI1_metadata <- read.csv(
+  file = "KI1/outs/singlecell.csv",
+  header = TRUE,
+  row.names = 1
+)
+
+KI1_chrom_assay <- CreateChromatinAssay(
+  counts = KI1_counts,
+  sep = c(":", "-"),
+  genome = 'mm10',
+  fragments = 'KI1/outs/fragments.tsv.gz',
+  min.cells = 0,
+  min.features = 0
+)
+
+KI1_SO <- CreateSeuratObject(
+  counts = KI1_chrom_assay,
+  assay = "peaks",
+  project = "KI1",
+  meta.data = KI1_metadata,
+  annotation = annotations
+)
+
+WT1_counts <- Read10X_h5(filename = "WT1/outs/filtered_peak_bc_matrix.h5")
+WT1_metadata <- read.csv(
+  file = "WT1/outs/singlecell.csv",
+  header = TRUE,
+  row.names = 1
+)
+
+WT1_chrom_assay <- CreateChromatinAssay(
+  counts = WT1_counts,
+  sep = c(":", "-"),
+  genome = 'mm10',
+  fragments = 'WT1/outs/fragments.tsv.gz',
+  min.cells = 0,
+  min.features = 0
+)
+
+WT1_SO <- CreateSeuratObject(
+  counts = WT1_chrom_assay,
+  assay = "peaks",
+  project = "WT1",
+  meta.data = WT1_metadata,
+  annotation = annotations
+)
+
+WT2_counts <- Read10X_h5(filename = "WT2/outs/filtered_peak_bc_matrix.h5")
+WT2_metadata <- read.csv(
+  file = "WT2/outs/singlecell.csv",
+  header = TRUE,
+  row.names = 1
+)
+
+WT2_chrom_assay <- CreateChromatinAssay(
+  counts = WT2_counts,
+  sep = c(":", "-"),
+  genome = 'mm10',
+  fragments = 'WT2/outs/fragments.tsv.gz',
+  min.cells = 0,
+  min.features = 0
+)
+
+WT2_SO <- CreateSeuratObject(
+  counts = WT2_chrom_assay,
+  assay = "peaks",
+  project = "WT2",
+  meta.data = WT2_metadata,
+  annotation = annotations
+)
+
+Annotation(KI1_SO) <- annotations
+Annotation(WT1_SO) <- annotations
+Annotation(WT2_SO) <- annotations
+
+KI1_SO <- NucleosomeSignal(KI1_SO) %>% TSSEnrichment(KI1_SO)
+WT1_SO <- NucleosomeSignal(WT1_SO) %>% TSSEnrichment(WT1_SO)
+WT2_SO <- NucleosomeSignal(WT2_SO) %>% TSSEnrichment(WT2_SO)
+
+KI1_SO$pct_reads_in_peaks <- KI1_SO$peak_region_fragments / KI1_SO$passed_filters * 100
+KI1_SO$blacklist_ratio <- KI1_SO$blacklist_region_fragments / KI1_SO$peak_region_fragments
+
+WT1_SO$pct_reads_in_peaks <- WT1_SO$peak_region_fragments / WT1_SO$passed_filters * 100
+WT1_SO$blacklist_ratio <- WT1_SO$blacklist_region_fragments / WT1_SO$peak_region_fragments
+
+WT2_SO$pct_reads_in_peaks <- WT2_SO$peak_region_fragments / WT2_SO$passed_filters * 100
+WT2_SO$blacklist_ratio <- WT2_SO$blacklist_region_fragments / WT2_SO$peak_region_fragments
+
+KI1 <- subset(
+    x = KI1_SO,
+    subset = peak_region_fragments > 3000 &
+    peak_region_fragments < 40000 &
+    pct_reads_in_peaks > 15 &
+    blacklist_ratio < 0.1 &
+    nucleosome_signal < 2 &
+    TSS.enrichment > 4
+)
+
+WT1 <- subset(
+    x = WT1_SO,
+    subset = peak_region_fragments > 3000 &
+    peak_region_fragments < 40000 &
+    pct_reads_in_peaks > 15 &
+    blacklist_ratio < 0.1 &
+    nucleosome_signal < 2 &
+    TSS.enrichment > 4
+)
+
+WT2 <- subset(
+    x = WT2_SO,
+    subset = peak_region_fragments > 3000 &
+    peak_region_fragments < 40000 &
+    pct_reads_in_peaks > 15 &
+    blacklist_ratio < 0.1 &
+    nucleosome_signal < 2 &
+    TSS.enrichment > 4
+)
+
+KI1 <- RunTFIDF(KI1, method = 1, scale.factor = 10000) %>% FindTopFeatures(min.cutoff = 'q5') %>% RunSVD(data_features_KI1)
+WT1 <- RunTFIDF(WT1, method = 1, scale.factor = 10000) %>% FindTopFeatures(min.cutoff = 'q5') %>% RunSVD(data_features_KI1)
+WT2 <- RunTFIDF(WT2, method = 1, scale.factor = 10000) %>% FindTopFeatures(min.cutoff = 'q5') %>% RunSVD(data_features_KI1)
+
+KI1_named <- RenameCells(KI1, add.cell.id = "KI1")
+WT1_named <- RenameCells(WT1, add.cell.id = "WT1")
+WT2_named <- RenameCells(WT2, add.cell.id = "WT2")
+
+merge <- merge(x = KI1_named, y = c(WT1_named, WT2_named))
+
+peaks <- CallPeaks(merge, macs2.path = "/usr/local/bin/macs2",  effective.genome.size = 2.3e+09, group.by ="orig.ident", combine.peaks = TRUE)
+peaks <- keepStandardChromosomes(peaks, pruning.mode = "coarse") %>% subsetByOverlaps(ranges = blacklist_mm10, invert = TRUE)
+
+macs2_counts <- FeatureMatrix(fragments = Fragments(merge), features = peaks, cells = colnames(merge))
+
+merge[["peaks"]] <- CreateChromatinAssay(counts = macs2_counts, fragments = Fragments(merge), annotation = annotations)
+
+DefaultAssay(merge) <- "peaks"
+
+merge <- RunTFIDF(merge, method = 1, scale.factor = 10000) %>% FindTopFeatures(min.cutoff = 'q5') %>% RunSVD() %>% RunUMAP(reduction = "lsi", dims = 2:30)
+
+data_KI1 <- subset(merge, idents = "KI1")
+data_WT1 <- subset(merge, idents = "WT1")
+data_WT2 <- subset(merge, idents = "WT2")
+
+anchors <- FindIntegrationAnchors(object.list = list(data_KI1, data_WT1, data_WT2), anchor.features = rownames(merge), reduction = "rlsi",dims = 2:30)
+data <- IntegrateEmbeddings(
+  anchorset = anchors,
+  reductions = merge[["lsi"]],
+  new.reduction.name = "integrated_lsi",
+  dims.to.integrate = 1:30
+)
+data <- RunUMAP(data, reduction = "integrated_lsi", dims = 2:30) %>% FindNeighbors(reduction = "integrated_lsi") %>% FindClusters(algorithm = 3, resolution = 0.3)
+
+gene.activities <- GeneActivity(data)
+data[['RNA']] <- CreateAssayObject(counts = gene.activities)
+data <- NormalizeData(
+  object = data,
+  assay = 'RNA',
+  normalization.method = 'LogNormalize',
+  scale.factor = median(data$nCount_RNA)
+)
+
+rna_data <- subset(combined, idents = c("E17WT1", "E17WT2", "E17KI1", "E17KI2", "E17KI3")
+transfer.anchors <- FindTransferAnchors(
+  reference = rna_data,
+  query = data,
+  features = rownames(data),
+  reference.assay = "RNA",
+  reduction = 'cca'
+)
+predicted.labels <- TransferData(
+  anchorset = transfer.anchors,
+  refdata = rna_data$celltype,
+  weight.reduction = data[['integrated_lsi']],
+  dims = 2:30
+)
+data <- AddMetaData(object = data, metadata = predicted.labels)
+
+Idents(data) <- "predicted.id"
+
+DefaultAssay(data) <- "peaks"
+CM0_marker <- FindMarkers(data, ident.1 ="Cardiomyocyte0", ident.2 = c("Cardiomyocyte1", "Cardiomyocyte4", "Cardiomyocyte5", "Cardiomyocyte6"), only.pos = TRUE, test.use = 'LR',logfc.threshold = 0.1, latent.vars = 'nCount_peaks') %>% dplyr::filter(p_val_adj < 0.05)
+
+pfm <- getMatrixSet(
+  x = JASPAR2020,
+  opts = list(all_versions = FALSE, tax_group="vertebrates")
+)
+
+data <- AddMotifs(
+  object = data,
+  genome = BSgenome.Mmusculus.UCSC.mm10,
+  pfm = pfm
+)
+
+enriched_motifs_CM0 <- FindMotifs(data,  features = rownames(CM0_marker))
+
